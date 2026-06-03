@@ -137,8 +137,7 @@ export const OpenAreaPage: React.FC = () => {
 {menuItems.filter(f => f.category === activeTab).map(item => {
   const isOutOfStock = item.quantity <= 0;
   
-  // Dynamic backend host configuration lookup matching local development rules
-  const backendBaseHost = 'http://localhost:3001'; 
+  const backendBaseHost = import.meta.env.VITE_API_URL || 'http://localhost:3001'; 
   const assetImageSource = item.imageUrl ? `${backendBaseHost}${item.imageUrl}` : null;
 
   return (

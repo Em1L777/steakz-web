@@ -417,9 +417,9 @@ export const ManagerDashboard: React.FC = () => {
                 const cleanPrice = isNaN(Number(item.price)) ? 0.00 : Number(item.price);
                 const cleanQuantity = item.quantity !== undefined ? item.quantity : 0;
                 
-                // Expose internal image strings paths cleanly
-                const assetImageSource = item.imageUrl ? `http://localhost:3001${item.imageUrl}` : null;
-
+                const baseHost = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                const assetImageSource = item.imageUrl ? `${baseHost}${item.imageUrl}` : null;
+                
                 return (
                   <tr key={itemKey} className="hover:bg-white/[0.01]">
                     <td className="p-4 font-medium tracking-wide">
