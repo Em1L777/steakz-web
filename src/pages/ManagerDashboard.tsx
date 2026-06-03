@@ -266,17 +266,44 @@ export const ManagerDashboard: React.FC = () => {
               <th className="p-4 text-right">Revocation</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
-            {roster.map(emp => (
-              <tr key={emp.id} className="hover:bg-white/[0.01] transition-colors">
-                <td className="p-4 font-medium"><div>{emp.name}</div><div className="text-[10px] text-gray-500 font-light mt-0.5">{emp.email}</div></td>
-                <td className="p-4"><span className="bg-white/5 text-gray-300 font-mono text-[10px] px-2 py-0.5 rounded border border-white/5">{emp.role}</span></td>
-                <td className="p-4 text-right">
-                  <button onClick={() => terminateContract(emp.id)} className="text-red-400/80 hover:text-red-400 font-medium">Terminate Profile</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+<tbody className="divide-y divide-white/5">
+  {roster.map(emp => {
+    // 🛡️ UI Safety Guard: Disable termination if the employee belongs to a different branch registry.
+    // High-level roles (ADMIN / HQ_MANAGER) can bypass this if they access the panel.
+    const isCrossBranchUser = 
+      user?.role === 'BRANCH_MANAGER' && 
+      (emp as any).branchId !== undefined && 
+      (emp as any).branchId !== user?.branchId;
+
+    return (
+      <tr key={emp.id} className="hover:bg-white/[0.01] transition-colors">
+        <td className="p-4 font-medium">
+          <div>{emp.name}</div>
+          <div className="text-[10px] text-gray-500 font-light mt-0.5">{emp.email}</div>
+        </td>
+        <td className="p-4">
+          <span className="bg-white/5 text-gray-300 font-mono text-[10px] px-2 py-0.5 rounded border border-white/5">
+            {emp.role}
+          </span>
+        </td>
+        <td className="p-4 text-right">
+          <button 
+            onClick={() => !isCrossBranchUser && terminateContract(emp.id)} 
+            disabled={isCrossBranchUser}
+            className={`font-medium text-xs tracking-wide transition-all ${
+              isCrossBranchUser 
+                ? 'text-zinc-700 cursor-not-allowed line-through opacity-40' 
+                : 'text-red-400/80 hover:text-red-400'
+            }`}
+            title={isCrossBranchUser ? "Restricted: Personnel asset profile belongs to an alternative location registry map node." : "Terminate profile"}
+          >
+            {isCrossBranchUser ? "Locked (Other Branch)" : "Terminate Profile"}
+          </button>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
         </table>
       </div>
     </div>
@@ -419,7 +446,7 @@ export const ManagerDashboard: React.FC = () => {
                 
                 const baseHost = import.meta.env.VITE_API_URL || 'http://localhost:3001';
                 const assetImageSource = item.imageUrl ? `${baseHost}${item.imageUrl}` : null;
-                
+
                 return (
                   <tr key={itemKey} className="hover:bg-white/[0.01]">
                     <td className="p-4 font-medium tracking-wide">
