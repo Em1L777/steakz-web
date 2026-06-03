@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     setUser(null);
 
-    window.location.href = '/kiosk'; // Redirect to public area on logout
+    
   };
 
   return (
