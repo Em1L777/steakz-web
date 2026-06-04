@@ -72,7 +72,7 @@ export const OpenAreaPage: React.FC = () => {
 
   const computePricing = () => {
     const itemsValue = Object.values(cart).reduce((acc, row) => acc + (row.item.price * row.qty), 0);
-    const serviceFee = itemsValue * 0.125;
+    const serviceFee = itemsValue * 0.85; // 8.5% service charge
     return { subtotal: itemsValue, fee: serviceFee, final: itemsValue + serviceFee };
   };
 
@@ -218,7 +218,7 @@ export const OpenAreaPage: React.FC = () => {
 
         <div className="space-y-2 text-xs text-gray-400 border-t border-white/5 pt-4">
           <div className="flex justify-between"><span>Subtotal</span><span className="text-white">£{computePricing().subtotal.toFixed(2)}</span></div>
-          <div className="flex justify-between"><span>Discretionary Cover (12.5%)</span><span className="text-white">£{computePricing().fee.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Service Charge (8.5%)</span><span className="text-white">£{computePricing().fee.toFixed(2)}</span></div>
           <div className="flex justify-between text-sm font-bold text-white border-t border-white/5 pt-2">
             <span>Total</span><span className="text-[#d4af37] font-mono">£{computePricing().final.toFixed(2)}</span>
           </div>
