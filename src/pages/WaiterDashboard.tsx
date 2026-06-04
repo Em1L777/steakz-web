@@ -70,7 +70,7 @@ export const WaiterDashboard: React.FC = () => {
           </div>
         </div>
         <button onClick={logout} className="w-full bg-white/5 hover:bg-red-950/30 border border-white/10 hover:border-red-900/30 text-gray-400 hover:text-red-400 py-2.5 rounded-lg text-[10px] uppercase font-bold tracking-widest transition-all">
-          Exit Station Session
+          Log Out
         </button>
       </aside>
 
