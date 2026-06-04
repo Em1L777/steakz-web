@@ -72,7 +72,7 @@ export const OpenAreaPage: React.FC = () => {
 
   const computePricing = () => {
     const itemsValue = Object.values(cart).reduce((acc, row) => acc + (row.item.price * row.qty), 0);
-    const serviceFee = itemsValue * 0.85; // 8.5% service charge
+    const serviceFee = itemsValue * 0.085; // 8.5% service charge
     return { subtotal: itemsValue, fee: serviceFee, final: itemsValue + serviceFee };
   };
 
