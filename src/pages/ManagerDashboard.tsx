@@ -88,11 +88,31 @@ export const ManagerDashboard: React.FC = () => {
 
   useEffect(() => { executeSync(); }, [user, tab]);
 
-  const hireStaff = async (e: React.FormEvent) => {
+const hireStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post(`/api/branches/${user?.branchId}/employees`, { name: formName, email: formEmail, password: formPass, role: formRole });
-    setFormName(''); setFormEmail(''); setFormPass('');
-    executeSync();
+    
+    // Core Safety Guard: Stop processing if user profile context has not completed initialization
+    if (!user?.branchId) {
+      alert("Operational error: Your profile is missing a valid branch context binding.");
+      return;
+    }
+    
+    try {
+      await api.post(`/api/branches/${user.branchId}/employees/${user.branchId}`, { 
+        name: formName, 
+        email: formEmail, 
+        password: formPass, 
+        role: formRole 
+      });
+      
+      setFormName(''); 
+      setFormEmail(''); 
+      setFormPass('');
+      executeSync();
+    } catch (err) {
+      console.error("Failed to provision local worker node:", err);
+      alert("Failed to successfully onboard employee record.");
+    }
   };
 
   const handleLogout = () => {
