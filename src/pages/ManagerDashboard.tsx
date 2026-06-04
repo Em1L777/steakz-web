@@ -191,6 +191,20 @@ const hireStaff = async (e: React.FormEvent) => {
     }
   };
 
+  const removeMenuItemFromMatrix = async (id: number) => {
+  if (!user?.branchId) return;
+  if (!confirm('Are you absolutely sure you want to remove this item permanently from the menu?')) return;
+
+  try {
+    await api.delete(`/api/branches/${user.branchId}/inventory/${id}`);
+    alert('Menu item successfully removed.');
+    executeSync(); // Refresh stock metrics immediately in UI
+  } catch (err: any) {
+    console.error("Menu removal transaction rejected:", err);
+    alert("Failed to delete item. Ensure it is not locked by an open order ticket.");
+  }
+};
+
   const handleCreateMenuItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.branchId) return;
@@ -492,6 +506,7 @@ const hireStaff = async (e: React.FormEvent) => {
                       <button onClick={() => overrideStockCount(item, cleanQuantity - 1)} className="bg-white/5 border border-white/5 px-2 py-0.5 rounded font-mono hover:bg-white/10 text-white">-1</button>
                       <button onClick={() => overrideStockCount(item, cleanQuantity + 10)} className="bg-white/5 border border-white/5 px-2 py-0.5 rounded font-mono hover:bg-white/10 text-white">+10</button>
                       <button onClick={() => openEditorPanel(item)} className="bg-amber-900/20 border border-amber-800/30 text-amber-400 px-2 py-0.5 rounded text-[11px] hover:bg-amber-900/40">Edit Menu Parameters</button>
+                      <button onClick={() => removeMenuItemFromMatrix(item.id)} className="bg-red-950/40 border border-red-900/40 text-red-400 px-2 py-0.5 rounded text-[11px] hover:bg-red-900/40 transition-colors">Delete Item</button>
                     </td>
                   </tr>
                 );
