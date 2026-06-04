@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 interface Order { id: number; tableNumber: number; details: string; totalPrice: number; status: string; }
 // New Type Layout definitions added cleanly
-interface Reservation { id: number; customerName: string; customerContact: string; tableNumber: number; reservedFor: string; status: string; }
+interface Reservation { id: number; customerName: string; customerContact: string; tableNumber: number; reservedFor: string; status: string; notes?: string;}
 
 export const WaiterDashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -100,6 +100,12 @@ export const WaiterDashboard: React.FC = () => {
                     </div>
                     <h3 className="text-xs font-bold text-white mb-0.5">{res.customerName}</h3>
                     <p className="text-[10px] text-gray-400 font-mono mb-4">{res.customerContact}</p>
+                    {/* ✅ ADDED: Render notes clearly if present on the reservation card */}
+                      {res.notes && (
+                        <div className="mt-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-200 text-xs">
+                          <strong>Note:</strong> {res.notes}
+                            </div>
+                        )}
                   </div>
                   
                   <button
