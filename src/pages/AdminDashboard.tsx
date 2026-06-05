@@ -143,7 +143,7 @@ export const AdminDashboard: React.FC = () => {
           <h2 className="font-serif text-lg text-[#d4af37]">Global User Clearance Map</h2>
           <div className="space-y-2.5">
             {userRecords
-              .filter(u => u.role === 'ADMIN' || u.role === 'HQ_MANAGER' || u.role === 'BRANCH_MANAGER')
+              .filter(u => u.role === 'ADMIN' || u.role === 'HQ_MANAGER' || u.role === 'BRANCH_MANAGER' || u.role === 'WAITER' || u.role === 'CHEF')
               .map(u => (
                 <div key={u.id} className="bg-black/30 border border-white/5 p-4 rounded-xl flex flex-col sm:flex-row gap-4 justify-between sm:items-center text-xs">
                   <div className="flex-1">
