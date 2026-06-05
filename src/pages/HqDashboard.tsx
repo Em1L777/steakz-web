@@ -63,7 +63,7 @@ export const HqDashboard: React.FC = () => {
   };
 
   // Calculate global Net Profit Margin (60% of total gross revenue)
-  const totalNetProfitMargin = (metrics?.totalRevenue || 0) * 0.60;
+  const totalNetProfitMargin = (metrics?.totalRevenue || 0) ;
 
   return (
     <div className="min-h-screen bg-[#131313] text-white p-8 max-w-6xl mx-auto space-y-8 font-sans">
@@ -125,7 +125,7 @@ export const HqDashboard: React.FC = () => {
                 {metrics?.branchRevenue.map(b => {
                   const isSelected = selectedBranchId === b.branchId;
                   // Calculate specific branch Net Profit Margin (60% of branch gross revenue)
-                  const branchNetProfitMargin = b.totalRevenue * 0.60;
+                  const branchNetProfitMargin = b.totalRevenue ;
 
                   return (
                     <tr 
