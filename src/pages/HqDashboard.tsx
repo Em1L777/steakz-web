@@ -7,9 +7,11 @@ interface BranchMetric {
   branchName: string;
   totalRevenue: number;
   orderCount: number;
+  netProfitMargin: number; // ✅ Added direct Net Profit Margin field calculated on backend
 }
 
 interface DashboardMetrics {
+  netProfitMargin: number; // ✅ Added direct Net Profit Margin field calculated on backend
   totalRevenue: number;
   branchRevenue: BranchMetric[];
 }
@@ -142,7 +144,7 @@ export const HqDashboard: React.FC = () => {
                       <td className="p-4 text-right font-mono text-gray-400">{b.orderCount} Closed Tickets</td>
                       {/* 🔄 CHANGED: Value cell calculated dynamically with the 60% remaining layout balance formula */}
                       <td className="p-4 text-right font-mono font-bold text-[#d4af37] text-sm">
-                        £{b.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        £{b.netProfitMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   );
