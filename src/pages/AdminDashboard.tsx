@@ -18,7 +18,7 @@ export const AdminDashboard: React.FC = () => {
   const [uName, setUName] = useState('');
   const [uEmail, setUEmail] = useState('');
   const [uPassword, setUPassword] = useState('');
-  const [uRole, setURole] = useState<'ADMIN' | 'HQ_MANAGER' | 'BRANCH_MANAGER'>('HQ_MANAGER');
+  const [uRole, setURole] = useState<'ADMIN' | 'HQ_MANAGER' | 'BRANCH_MANAGER' | 'CHEF' | 'WAITER'>('HQ_MANAGER');
   const [uBranchId, setUBranchId] = useState<string>('');
 
   const syncDashboardData = async () => {
@@ -46,7 +46,7 @@ export const AdminDashboard: React.FC = () => {
         email: uEmail, 
         password: uPassword, 
         role: uRole,
-        branchId: uRole === 'BRANCH_MANAGER' && uBranchId ? parseInt(uBranchId, 10) : null 
+        branchId: (uRole === 'BRANCH_MANAGER' || uRole === 'CHEF' || uRole === 'WAITER') && uBranchId ? parseInt(uBranchId, 10) : null
       });
       alert('Management profile provisioned successfully.');
       setUName(''); setUEmail(''); setUPassword(''); setUBranchId('');
@@ -142,9 +142,7 @@ export const AdminDashboard: React.FC = () => {
         <div className="bg-[#181818] border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
           <h2 className="font-serif text-lg text-[#d4af37]">Global User Clearance Map</h2>
           <div className="space-y-2.5">
-            {userRecords
-              .filter(u => u.role === 'ADMIN' || u.role === 'HQ_MANAGER' || u.role === 'BRANCH_MANAGER' || u.role === 'WAITER' || u.role === 'CHEF')
-              .map(u => (
+            {userRecords.map(u => (
                 <div key={u.id} className="bg-black/30 border border-white/5 p-4 rounded-xl flex flex-col sm:flex-row gap-4 justify-between sm:items-center text-xs">
                   <div className="flex-1">
                     <div className="font-bold text-white text-sm flex items-center gap-2">
