@@ -1,163 +1,206 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { useAuth } from '../context/AuthContext';
 
-interface Order { id: number; tableNumber: number; details: string; totalPrice: number; status: string; }
-// New Type Layout definitions added cleanly
-interface Reservation { id: number; customerName: string; customerContact: string; tableNumber: number; reservedFor: string; status: string; notes?: string;}
+interface OrderItem {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+interface OrderRecord {
+  id: number;
+  tableNumber: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'READY' | 'COMPLETED';
+  isPaid: boolean;
+  details: string; // JSON or plaintext string holding ordered items array info
+  totalPrice: number;
+  waiterId: number | null;
+  createdAt: string;
+}
 
 export const WaiterDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]); // New State
+  const [activeTickets, setActiveTickets] = useState<OrderRecord[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Invoice/Ticket Modal State Management
+  const [selectedInvoice, setSelectedInvoice] = useState<OrderRecord | null>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
-  const synchFloorQueue = async () => {
-    if (!user?.branchId) return;
+  const fetchActiveBranchManifest = async () => {
+    setLoading(true);
     try {
-      const resOrders = await api.get(`/api/branches/${user.branchId}/orders`);
-      setOrders(resOrders.data);
-      
-      // Fetch oncoming reservation bookings for floor syncing
-      const resReservations = await api.get(`/api/branches/${user.branchId}/reservations`);
-      setReservations(resReservations.data);
-    } catch {
-      console.error('Failed to sync live floor queue.');
+      const res = await api.get('/api/orders');
+      setActiveTickets(res.data);
+    } catch (err) {
+      console.error('Error synchronizing active branch orders directory:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    synchFloorQueue();
-    const interval = setInterval(synchFloorQueue, 5000);
-    return () => clearInterval(interval);
-  }, [user]);
+    fetchActiveBranchManifest();
+  }, []);
 
   const claimTicket = async (id: number) => {
-    await api.post(`/api/branches/${user?.branchId}/orders/${id}/assign`);
-    synchFloorQueue();
-  };
-
-  const deliverAndResetTable = async (id: number) => {
-    await api.post(`/api/branches/${user?.branchId}/orders/${id}/complete`);
-    synchFloorQueue();
-  };
-
-  // ✅ New Lifecycle State Change Handler for Floor Waiters
-  const markAsArrived = async (reservationId: number) => {
     try {
-      await api.patch(`/api/branches/${user?.branchId}/reservations/${reservationId}/arrive`);
-      // Update state instantly so it disappears immediately from view
-      setReservations(prev => prev.filter(res => res.id !== reservationId));
-    } catch (err) {
-      console.error('Failed to update arrival tracking state.');
+      await api.patch(`/api/orders/${id}/status`, { status: 'IN_PROGRESS' });
+      fetchActiveBranchManifest();
+    } catch {
+      alert('Failed to claim target service ticket.');
     }
   };
 
+  // Step 1: Mark order as delivered (Status goes to COMPLETED, but isPaid remains false)
+  const deliverTicketItems = async (id: number) => {
+    try {
+      await api.patch(`/api/orders/${id}/status`, { status: 'COMPLETED' });
+      fetchActiveBranchManifest();
+    } catch {
+      alert('Failed to record delivery validation.');
+    }
+  };
+
+  // Step 2: Finalize Payment confirmation inside invoice modal
+  const handleFinalizePayment = async () => {
+    if (!selectedInvoice) return;
+    setProcessingPayment(true);
+    try {
+      await api.patch(`/api/orders/${selectedInvoice.id}/pay`);
+      setSelectedInvoice(null);
+      fetchActiveBranchManifest();
+    } catch {
+      alert('Transaction settlement engine rejected verification request.');
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  // Safe helper to parse text itemizations out of existing plaintext detail rows
+  const renderItemizedLines = (detailsStr: string) => {
+    try {
+      if (detailsStr.startsWith('[') || detailsStr.startsWith('{')) {
+        const parsed = JSON.parse(detailsStr);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item: any, idx: number) => (
+            <div key={idx} className="flex justify-between items-center py-1 border-b border-white/5 text-zinc-300">
+              <span>{item.name || item.itemName} <span className="text-gray-500 font-mono">x{item.quantity}</span></span>
+              <span className="font-mono text-zinc-400">${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+            </div>
+          ));
+        }
+      }
+    } catch {}
+    return <p className="text-zinc-400 whitespace-pre-wrap italic text-[11px] leading-relaxed">{detailsStr}</p>;
+  };
+
   return (
-    <div className="min-h-screen bg-[#131313] text-white font-sans grid grid-cols-1 xl:grid-cols-4">
-      <aside className="bg-[#1a1a1a] p-6 border-r border-white/5 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#111111] text-white p-8 font-sans max-w-6xl mx-auto space-y-6">
+      <div className="border-b border-white/5 pb-4 flex justify-between items-center">
         <div>
-          <div className="flex items-center gap-3 mb-8">
-            <span className="text-2xl">🥩</span>
-            <div>
-              <h1 className="text-sm font-bold tracking-widest uppercase text-[#d4af37]">Steakz Floor</h1>
-              <p className="text-[10px] text-gray-500 font-medium">Waiter Workspace Engine</p>
-            </div>
-          </div>
-          <div className="bg-black/30 rounded-lg p-3 border border-white/5 mb-6">
-            <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Active Operator</p>
-            <p className="text-xs font-semibold text-white">{user?.name}</p>
-            <p className="text-[10px] text-gray-500">Branch Station ID: {user?.branchId}</p>
-          </div>
+          <h1 className="font-serif text-3xl tracking-wide font-bold">Floor Service Center</h1>
+          <p className="text-[10px] text-[#d4af37] font-medium uppercase tracking-widest mt-1">Live Order Flow Management</p>
         </div>
-        <button onClick={logout} className="w-full bg-white/5 hover:bg-red-950/30 border border-white/10 hover:border-red-900/30 text-gray-400 hover:text-red-400 py-2.5 rounded-lg text-[10px] uppercase font-bold tracking-widest transition-all">
-          Log Out
+        <button onClick={fetchActiveBranchManifest} className="bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-xs px-4 py-2 rounded-xl transition-colors font-medium">
+          Refresh Layout
         </button>
-      </aside>
+      </div>
 
-      <main className="xl:col-span-3 p-8 space-y-8 overflow-y-auto max-h-screen">
-        
-        {/* ==================== ✅ NEW RESERVATION LIFE WORKFLOW SECTION ==================== */}
-        <div>
-          <h2 className="text-xs uppercase tracking-widest text-gray-400 font-bold mb-4 flex items-center gap-2">
-            <span>📅</span> Oncoming Shift Bookings (Active Only)
-          </h2>
-          {reservations.length === 0 ? (
-            <p className="text-xs text-gray-600 bg-black/20 p-4 rounded-lg border border-dashed border-white/5 text-center">
-              No oncoming table reservations booked for this shift.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {reservations.map((res) => (
-                <div key={res.id} className="bg-[#1c1c1c] border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-[#d4af37]/30 transition-all">
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/20 text-[10px] font-bold px-2.5 py-0.5 rounded-md">
-                        Table #{res.tableNumber}
-                      </span>
-                      <span className="text-gray-500 text-[11px]">
-                        {new Date(res.reservedFor).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <h3 className="text-xs font-bold text-white mb-0.5">{res.customerName}</h3>
-                    <p className="text-[10px] text-gray-400 font-mono mb-4">{res.customerContact}</p>
-                    {/* ✅ ADDED: Render notes clearly if present on the reservation card */}
-                      {res.notes && (
-                        <div className="mt-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-200 text-xs">
-                          <strong>Note:</strong> {res.notes}
-                            </div>
-                        )}
-                  </div>
-                  
-                  <button
-                    onClick={() => markAsArrived(res.id)}
-                    className="w-full bg-[#d4af37] hover:bg-[#c5a232] text-black font-bold py-2 rounded-lg text-[10px] uppercase tracking-wider transition-all"
-                  >
-                    Mark as Arrived
+      {loading ? (
+        <p className="text-zinc-500 text-xs italic animate-pulse">Syncing floor layout maps...</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {activeTickets.map((ord) => (
+            <div key={ord.id} className="bg-[#161616] border border-white/5 p-5 rounded-2xl shadow-xl flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex justify-between items-start mb-2">
+                  <span className="font-bold text-sm text-white">Table {ord.tableNumber}</span>
+                  <span className={`text-[9px] uppercase font-mono font-bold tracking-widest px-2 py-0.5 rounded ${
+                    ord.status === 'READY' ? 'bg-green-500/10 text-green-400 border border-green-500/20 animate-pulse' : 
+                    ord.status === 'COMPLETED' && !ord.isPaid ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                    ord.status === 'COMPLETED' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                    'bg-zinc-800 text-zinc-400'
+                  }`}>
+                    {ord.status === 'COMPLETED' && !ord.isPaid ? 'AWAITING PAYMENT' : ord.status}
+                  </span>
+                </div>
+                <div className="bg-black/30 p-3 rounded-xl border border-white/5 max-h-32 overflow-y-auto">
+                  {renderItemizedLines(ord.details)}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5">
+                <span className="text-sm font-mono font-bold text-[#d4af37]">${ord.totalPrice.toFixed(2)}</span>
+                
+                {ord.status === 'PENDING' && (
+                  <button onClick={() => claimTicket(ord.id)} className="bg-white text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                    Assign Me
                   </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                )}
+                
+                {ord.status === 'READY' && (
+                  <button onClick={() => deliverTicketItems(ord.id)} className="bg-green-500 text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-green-400 transition-colors">
+                    Mark Delivered
+                  </button>
+                )}
 
-        {/* Existing Order Workflow Panel section stays perfectly untouched */}
-        <div>
-          <h2 className="text-xs uppercase tracking-widest text-gray-400 font-bold mb-4 flex items-center gap-2">
-            <span>🍽️</span> Active Tables & Order Pipeline
-          </h2>
-          {orders.length === 0 ? (
-            <p className="text-xs text-gray-600 bg-black/20 p-4 rounded-lg border border-dashed border-white/5 text-center">
-              No active floor tickets processing at this time.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {orders.map((ord) => (
-                <div key={ord.id} className="bg-[#1c1c1c] border border-white/10 rounded-xl p-5 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
-                      <span className="font-bold text-xs text-white">Table {ord.tableNumber}</span>
-                      <span className={`text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded ${
-                        ord.status === 'READY' ? 'bg-green-500 text-black animate-pulse' : 'bg-gray-800 text-gray-400'
-                      }`}>{ord.status}</span>
-                    </div>
-                    <p className="text-xs text-gray-300 font-mono bg-black/30 p-2.5 rounded border border-white/5 whitespace-pre-wrap mb-4">{ord.details}</p>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 pt-2">
-                    <span className="text-xs font-bold text-[#d4af37]">${ord.totalPrice.toFixed(2)}</span>
-                    {ord.status === 'PENDING' && (
-                      <button onClick={() => claimTicket(ord.id)} className="bg-white text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded hover:bg-gray-200 transition-colors">Assign Me</button>
-                    )}
-                    {ord.status === 'READY' && (
-                      <button onClick={() => deliverAndResetTable(ord.id)} className="bg-green-500 text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded hover:bg-green-400 transition-colors">Mark Delivered</button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                {/* NEW INTERACTIVE FLOW TRIGGER: Appears smoothly only after confirmation of physical table delivery */}
+                {ord.status === 'COMPLETED' && !ord.isPaid && (
+                  <button onClick={() => setSelectedInvoice(ord)} className="bg-[#d4af37] text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg hover:bg-[#c5a232] transition-colors shadow-lg shadow-[#d4af37]/10">
+                    Get Payment
+                  </button>
+                )}
+              </div>
             </div>
-          )}
+          ))}
         </div>
+      )}
 
-      </main>
+      {/* 🧾 CRISP TICKET INVOICE DETAIL MODAL OVERLAY */}
+      {selectedInvoice && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 animate-fadeIn backdrop-blur-sm">
+          <div className="bg-[#161616] border border-white/10 w-full max-w-sm rounded-2xl p-6 shadow-2xl relative flex flex-col justify-between space-y-6">
+            
+            {/* Header */}
+            <div className="text-center space-y-1">
+              <h3 className="font-serif text-xl tracking-wide text-white">Guest Settlement Receipt</h3>
+              <p className="text-[9px] text-[#d4af37] font-mono uppercase tracking-widest">Table {selectedInvoice.tableNumber} • Transaction #{selectedInvoice.id}</p>
+            </div>
+
+            {/* Bill Core Details */}
+            <div className="bg-black/40 border border-white/5 p-4 rounded-xl space-y-3 font-mono text-xs">
+              <div className="border-b border-white/10 pb-2 mb-2 uppercase text-[9px] text-zinc-500 font-bold tracking-widest">Itemized Breakdown</div>
+              <div className="max-h-40 overflow-y-auto pr-1">
+                {renderItemizedLines(selectedInvoice.details)}
+              </div>
+              <div className="flex justify-between items-center pt-3 border-t border-dashed border-white/20 text-sm font-bold text-white">
+                <span>TOTAL PAYABLE</span>
+                <span className="text-[#d4af37]">${selectedInvoice.totalPrice.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Actions Stack */}
+            <div className="grid grid-cols-2 gap-3 text-[10px] uppercase tracking-wider font-bold">
+              <button 
+                onClick={() => setSelectedInvoice(null)} 
+                disabled={processingPayment}
+                className="w-full bg-transparent text-zinc-400 hover:text-white border border-white/10 p-3.5 rounded-xl transition-colors text-center"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleFinalizePayment}
+                disabled={processingPayment}
+                className="w-full bg-green-500 text-black p-3.5 rounded-xl transition-all hover:bg-green-400 shadow-xl shadow-green-500/10 text-center flex items-center justify-center"
+              >
+                {processingPayment ? 'Settling...' : 'Confirm Paid'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };
