@@ -62,8 +62,7 @@ export const HqDashboard: React.FC = () => {
       });
   };
 
-  // Calculate global Net Profit Margin (60% of total gross revenue)
-  const totalNetProfitMargin = (metrics?.totalRevenue || 0) * 0.60;
+
 
   return (
     <div className="min-h-screen bg-[#131313] text-white p-8 max-w-6xl mx-auto space-y-8 font-sans">
