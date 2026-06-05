@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 
-interface OrderItem {
-  id: number;
-  name: string;
-  quantity: number;
-  price: number;
-}
+
 
 interface OrderRecord {
   id: number;
