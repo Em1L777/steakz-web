@@ -40,18 +40,17 @@ const claimTicket = async (id: number) => {
   } catch {
     alert('Failed to claim target service ticket.');
   }
+}
+
+// 2. Mark Delivered moves order to COMPLETED (stays on screen because isPaid is false)
+const deliverTicketItems = async (id: number) => {
+  try {
+    await api.patch(`/api/branches/${user?.branchId}/orders/${id}/status`, { status: 'COMPLETED' });
+    synchFloorQueue();
+  } catch {
+    alert('Failed to record delivery validation.');
+  }
 };
-
-  // 1. Move to a temporary step so it STAYS visible in the queue instead of disappearing
-  const deliverTicketItems = async (id: number) => {
-    try {
-      await api.patch(`/api/branches/${user?.branchId}/orders/${id}/status`, { status: 'IN_PROGRESS' });
-      synchFloorQueue();
-    } catch {
-      alert('Failed to record delivery validation.');
-    }
-  };
-
   // 2. Final settlement from the interactive ticket pop-up modal
   const handleFinalizePayment = async () => {
     if (!selectedInvoice || !user?.branchId) return;
@@ -157,29 +156,32 @@ const claimTicket = async (id: number) => {
               {orders.map((ord) => (
                 <div key={ord.id} className="bg-[#1c1c1c] border border-white/10 rounded-xl p-5 flex flex-col justify-between">
                   <div>
-                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
-                      <span className="font-bold text-xs text-white">Table {ord.tableNumber}</span>
-                      <span className={`text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded ${
-                        ord.status === 'READY' ? 'bg-green-500 text-black animate-pulse' : 
-                        ord.status === 'IN_PROGRESS' ? 'bg-amber-500 text-black' : 'bg-gray-800 text-gray-400'
-                      }`}>
-                        {ord.status === 'IN_PROGRESS' ? 'DELIVERED (UNPAID)' : ord.status}
-                      </span>
+                   <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
+                    <span className="font-bold text-xs text-white">Table {ord.tableNumber}</span>
+                    <span className={`text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded ${
+                      ord.status === 'READY' ? 'bg-green-500 text-black animate-pulse' : 
+                      ord.status === 'COMPLETED' && !ord.isPaid ? 'bg-amber-500 text-black' : 'bg-gray-800 text-gray-400'
+                        }`}>
+                    {ord.status === 'COMPLETED' && !ord.isPaid ? 'DELIVERED (UNPAID)' : ord.status}
+                    </span>
                     </div>
                     <p className="text-xs text-gray-300 font-mono bg-black/30 p-2.5 rounded border border-white/5 whitespace-pre-wrap mb-4">{ord.details}</p>
                   </div>
                   <div className="flex items-center justify-between gap-3 pt-2">
-                    <span className="text-xs font-bold text-[#d4af37]">${ord.totalPrice.toFixed(2)}</span>
-                    {ord.status === 'PENDING' && (
-                      <button onClick={() => claimTicket(ord.id)} className="bg-white text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded hover:bg-gray-200 transition-colors">Assign Me</button>
-                    )}
-                    {ord.status === 'READY' && (
-                      <button onClick={() => deliverTicketItems(ord.id)} className="bg-green-500 text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded hover:bg-green-400 transition-colors">Mark Delivered</button>
-                    )}
-                    {ord.status === 'IN_PROGRESS' && (
-                      <button onClick={() => setSelectedInvoice(ord)} className="bg-[#d4af37] text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded hover:bg-[#c5a232] transition-colors shadow-lg">Get Payment</button>
-                    )}
-                  </div>
+  <span className="text-xs font-bold text-[#d4af37]">${ord.totalPrice.toFixed(2)}</span>
+  
+  {ord.status === 'PENDING' && (
+    <button onClick={() => claimTicket(ord.id)} className="bg-white text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded hover:bg-gray-200 transition-colors">Assign Me</button>
+  )}
+  
+  {ord.status === 'READY' && (
+    <button onClick={() => deliverTicketItems(ord.id)} className="bg-green-500 text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded hover:bg-green-400 transition-colors">Mark Delivered</button>
+  )}
+  
+  {ord.status === 'COMPLETED' && !ord.isPaid && (
+    <button onClick={() => setSelectedInvoice(ord)} className="bg-[#d4af37] text-black font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded hover:bg-[#c5a232] transition-colors shadow-lg">Get Payment</button>
+  )}
+</div>
                 </div>
               ))}
             </div>
