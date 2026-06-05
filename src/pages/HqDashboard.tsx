@@ -7,11 +7,9 @@ interface BranchMetric {
   branchName: string;
   totalRevenue: number;
   orderCount: number;
-  netProfitMargin: number; // ✅ Added direct Net Profit Margin field calculated on backend
 }
 
 interface DashboardMetrics {
-  netProfitMargin: number; // ✅ Added direct Net Profit Margin field calculated on backend
   totalRevenue: number;
   branchRevenue: BranchMetric[];
 }
@@ -64,7 +62,8 @@ export const HqDashboard: React.FC = () => {
       });
   };
 
-
+  // Calculate global Net Profit Margin (60% of total gross revenue)
+  const totalNetProfitMargin = (metrics?.totalRevenue || 0) * 0.60;
 
   return (
     <div className="min-h-screen bg-[#131313] text-white p-8 max-w-6xl mx-auto space-y-8 font-sans">
@@ -95,8 +94,7 @@ export const HqDashboard: React.FC = () => {
         <div className="bg-[#181818]/80 border border-white/5 p-6 rounded-2xl shadow-xl">
           <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-semibold">Total Aggregated Net Profit Margin (60%)</span>
           <div className="text-4xl font-serif text-[#d4af37] font-black mt-2">
-            {/* 💸 Displays the direct backend calculated total amount */}
-            £{(metrics?.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            £{totalNetProfitMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
         <div className="bg-[#181818]/80 border border-white/5 p-6 rounded-2xl shadow-xl">
@@ -126,7 +124,8 @@ export const HqDashboard: React.FC = () => {
               <tbody className="divide-y divide-white/5">
                 {metrics?.branchRevenue.map(b => {
                   const isSelected = selectedBranchId === b.branchId;
-                  
+                  // Calculate specific branch Net Profit Margin (60% of branch gross revenue)
+                  const branchNetProfitMargin = b.totalRevenue * 0.60;
 
                   return (
                     <tr 
@@ -144,7 +143,7 @@ export const HqDashboard: React.FC = () => {
                       <td className="p-4 text-right font-mono text-gray-400">{b.orderCount} Closed Tickets</td>
                       {/* 🔄 CHANGED: Value cell calculated dynamically with the 60% remaining layout balance formula */}
                       <td className="p-4 text-right font-mono font-bold text-[#d4af37] text-sm">
-                        £{b.netProfitMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        £{branchNetProfitMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   );
