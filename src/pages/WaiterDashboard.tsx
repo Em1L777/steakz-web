@@ -33,10 +33,14 @@ export const WaiterDashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [user]);
 
-  const claimTicket = async (id: number) => {
-    await api.post(`/api/branches/${user?.branchId}/orders/${id}/assign`);
+const claimTicket = async (id: number) => {
+  try {
+    await api.patch(`/api/branches/${user?.branchId}/orders/${id}/status`, { status: 'IN_PROGRESS' });
     synchFloorQueue();
-  };
+  } catch {
+    alert('Failed to claim target service ticket.');
+  }
+};
 
   // 1. Move to a temporary step so it STAYS visible in the queue instead of disappearing
   const deliverTicketItems = async (id: number) => {
