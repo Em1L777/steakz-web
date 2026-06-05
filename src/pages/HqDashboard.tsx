@@ -14,7 +14,7 @@ interface DashboardMetrics {
   branchRevenue: BranchMetric[];
 }
 
-// ✅ Type interface for the read-only roster list matching backend keys[cite: 3]
+// ✅ Type interface for the read-only roster list matching backend keys
 interface StaffMember {
   id: number;
   name: string;
@@ -27,7 +27,7 @@ export const HqDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Component states to track selection details[cite: 3]
+  // ✅ Component states to track selection details
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
   const [selectedBranchName, setSelectedBranchName] = useState<string>('');
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
@@ -44,7 +44,7 @@ export const HqDashboard: React.FC = () => {
       });
   }, []);
 
-  // ✅ Read-only fetching function tied to your existing branch endpoint[cite: 3]
+  // ✅ Read-only fetching function tied to your existing branch endpoint
   const handleBranchClick = (branchId: number, branchName: string) => {
     setSelectedBranchId(branchId);
     setSelectedBranchName(branchName);
@@ -61,6 +61,9 @@ export const HqDashboard: React.FC = () => {
         setLoadingStaff(false);
       });
   };
+
+  // Calculate global Net Profit Margin (60% of total gross revenue)
+  const totalNetProfitMargin = (metrics?.totalRevenue || 0) * 0.60;
 
   return (
     <div className="min-h-screen bg-[#131313] text-white p-8 max-w-6xl mx-auto space-y-8 font-sans">
@@ -87,10 +90,11 @@ export const HqDashboard: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* 🔄 CHANGED: Text updated to Net Profit Margin and calculation integrated */}
         <div className="bg-[#181818]/80 border border-white/5 p-6 rounded-2xl shadow-xl">
-          <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-semibold">Total Aggregated Group Revenue</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-semibold">Total Aggregated Net Profit Margin (60%)</span>
           <div className="text-4xl font-serif text-[#d4af37] font-black mt-2">
-            £{(metrics?.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            £{totalNetProfitMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
         <div className="bg-[#181818]/80 border border-white/5 p-6 rounded-2xl shadow-xl">
@@ -101,10 +105,10 @@ export const HqDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Main layout split setup: Table on left, view-only staff list panel on right[cite: 3] */}
+      {/* Main layout split setup: Table on left, view-only staff list panel on right */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
-        {/* NETWORK DIRECTORY TABLE CONTAINER[cite: 3] */}
+        {/* NETWORK DIRECTORY TABLE CONTAINER */}
         <div className="lg:col-span-2 space-y-4">
           <h2 className="font-serif text-xl font-medium tracking-wide">Network Distribution Directory</h2>
           <div className="bg-[#181818] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
@@ -113,16 +117,20 @@ export const HqDashboard: React.FC = () => {
                 <tr className="bg-black/40 border-b border-white/5 text-gray-400 uppercase tracking-wider font-medium">
                   <th className="p-4">Branch Profile Node</th>
                   <th className="p-4 text-right">Throughput Operations</th>
-                  <th className="p-4 text-right text-[#d4af37]">Financial Yield (Gross)</th>
+                  {/* 🔄 CHANGED: Column heading updated to show Net Margin */}
+                  <th className="p-4 text-right text-[#d4af37]">Net Profit Margin (60%)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {metrics?.branchRevenue.map(b => {
                   const isSelected = selectedBranchId === b.branchId;
+                  // Calculate specific branch Net Profit Margin (60% of branch gross revenue)
+                  const branchNetProfitMargin = b.totalRevenue * 0.60;
+
                   return (
                     <tr 
                       key={b.branchId} 
-                      // ✅ Added structural click handler, pointer cursor, and visual selections[cite: 3]
+                      // ✅ Added structural click handler, pointer cursor, and visual selections
                       onClick={() => handleBranchClick(b.branchId, b.branchName)}
                       className={`cursor-pointer transition-colors ${
                         isSelected ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
@@ -133,8 +141,9 @@ export const HqDashboard: React.FC = () => {
                         {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] inline-block animate-pulse" />}
                       </td>
                       <td className="p-4 text-right font-mono text-gray-400">{b.orderCount} Closed Tickets</td>
+                      {/* 🔄 CHANGED: Value cell calculated dynamically with the 60% remaining layout balance formula */}
                       <td className="p-4 text-right font-mono font-bold text-[#d4af37] text-sm">
-                        £{b.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        £{branchNetProfitMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   );
@@ -145,7 +154,7 @@ export const HqDashboard: React.FC = () => {
           <p className="text-[10px] text-gray-500 font-mono italic">💡 Click on any branch row above to safely audit its active personnel roster.</p>
         </div>
 
-        {/* ✅ Purely view-only personnel information directory panel[cite: 3] */}
+        {/* ✅ Purely view-only personnel information directory panel */}
         <div className="space-y-4">
           <h2 className="font-serif text-xl font-medium tracking-wide text-gray-400">Roster Assignment Matrix</h2>
           
@@ -179,7 +188,7 @@ export const HqDashboard: React.FC = () => {
                           <p className="font-medium text-white text-sm">{member.name}</p>
                           <p className="text-[10px] text-gray-500 font-mono">{member.email}</p>
                         </div>
-                        {/* Status Role Badge Pill Display[cite: 3] */}
+                        {/* Status Role Badge Pill Display */}
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono tracking-wider font-semibold uppercase border ${
                           member.role === 'BRANCH_MANAGER' 
                             ? 'bg-amber-950/20 text-amber-400 border-amber-900/40' 
