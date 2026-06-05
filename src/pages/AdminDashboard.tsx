@@ -119,6 +119,10 @@ export const AdminDashboard: React.FC = () => {
     navigate('/login');
   };
 
+  const isBranchScopedRole = (role: string) => {
+    return role === 'BRANCH_MANAGER' || role === 'CHEF' || role === 'WAITER';
+  };
+
   return (
     <div className="min-h-screen bg-[#131313] text-white p-8 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 font-sans">
       <div className="lg:col-span-2 space-y-6">
@@ -165,20 +169,22 @@ export const AdminDashboard: React.FC = () => {
                       <option value="ADMIN">ADMIN</option>
                       <option value="HQ_MANAGER">HQ_MANAGER</option>
                       <option value="BRANCH_MANAGER">BRANCH_MANAGER</option>
+                      <option value="CHEF">CHEF</option>
+                      <option value="WAITER">WAITER</option>
                     </select>
 
-                    {u.role === 'BRANCH_MANAGER' && (
-                      <select
-                        value={u.branchId || 'unassigned'}
-                        onChange={e => handleAssignBranch(u.id, e.target.value)}
-                        className="bg-[#1e1e1e] border border-[#d4af37]/30 text-[#d4af37] rounded-lg p-2 text-xs focus:outline-none font-mono"
-                      >
-                        <option value="unassigned">-- Select Assigned Branch --</option>
-                        {branches.map(b => (
-                          <option key={b.id} value={b.id}>{b.name} ({b.location})</option>
-                        ))}
-                      </select>
-                    )}
+                  {isBranchScopedRole(u.role) && (
+                    <select
+                      value={u.branchId || 'unassigned'}
+                      onChange={e => handleAssignBranch(u.id, e.target.value)}
+                      className="bg-[#1e1e1e] border border-[#d4af37]/30 text-[#d4af37] rounded-lg p-2 text-xs focus:outline-none font-mono"
+                    >
+                      <option value="unassigned">-- Select Assigned Branch --</option>
+                      {branches.map(b => (
+                        <option key={b.id} value={b.id}>{b.name} ({b.location})</option>
+                      ))}
+                    </select>
+                  )}
 
                     {/* Trash Can Action Button for User Deactivation */}
                     <button
