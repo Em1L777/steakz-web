@@ -8,11 +8,12 @@ export const ChefDashboard: React.FC = () => {
   const { user, logout } = useAuth(); // ✅ Extracting logout method from active AuthContext instance
   const [tickets, setTickets] = useState<Ticket[]>([]);
 
-  const fetchKitchenLine = async () => {
+const fetchKitchenLine = async () => {
     if (!user?.branchId) return;
     try {
       const res = await api.get(`/api/branches/${user.branchId}/orders`);
-      setTickets(res.data.filter((t: Ticket) => t.status !== 'COMPLETED' && t.status !== 'READY'));
+      // 🎯 Only show tickets that are IN_PROGRESS (assigned by a waiter)
+      setTickets(res.data.filter((t: Ticket) => t.status === 'IN_PROGRESS'));
     } catch {
       console.error('KDS pipeline connection dropped.');
     }
@@ -93,29 +94,31 @@ export const ChefDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-auto pt-4 border-t border-white/5 space-y-2">
-  {/* If the ticket is completely fresh (PENDING) */}
-  {ticket.status === 'PENDING' && (
-    <button
-      onClick={() => fireStatusTransition(ticket.id, 'IN_PROGRESS')}
-      className="w-full bg-[#d4af37] text-black font-bold py-2 rounded text-xs uppercase tracking-wider hover:bg-[#bfa232] transition-colors"
-    >
-      Accept / Start Cooking
-    </button>
-  )}
+            {/* TICKET FOOTER ACTIONS */}
+<div className="mt-auto pt-4 border-t border-white/5 flex flex-col gap-2">
+  
+  {/* 👨‍🍳 Button 1: Accept / Start Cooking */}
+  <button
+    onClick={(e) => {
+      // Visual feedback or secondary logging can go here
+      const btn = e.currentTarget;
+      btn.innerText = "✓ Cooking Started";
+      btn.disabled = true;
+      btn.className = "w-full bg-zinc-800 text-zinc-400 font-bold py-2 rounded text-xs uppercase tracking-wider cursor-not-allowed border border-white/5 transition-all";
+    }}
+    className="w-full bg-[#d4af37] text-black font-bold py-2 rounded text-xs uppercase tracking-wider hover:bg-[#bfa232] transition-colors"
+  >
+    Accept / Start Cooking
+  </button>
 
-  {/* If a waiter claimed it, it is 'IN_PROGRESS' but the chef hasn't cooked it yet. 
-      We show BOTH buttons so the chef can choose to explicitly accept it or mark it ready straight away! */}
-  {ticket.status === 'IN_PROGRESS' && (
-    <div className="flex flex-col gap-2">
-      <button
-        onClick={() => fireStatusTransition(ticket.id, 'READY')}
-        className="w-full bg-emerald-500 text-black font-bold py-2 rounded text-xs uppercase tracking-wider hover:bg-emerald-400 transition-colors"
-      >
-        Pass Ready
-      </button>
-    </div>
-  )}
+  {/* 🏁 Button 2: Pass Ready */}
+  <button
+    onClick={() => fireStatusTransition(ticket.id, 'READY')}
+    className="w-full bg-emerald-500 text-black font-bold py-2 rounded text-xs uppercase tracking-wider hover:bg-emerald-400 transition-colors"
+  >
+    Pass Ready
+  </button>
+  
 </div>
           </div>
         ))}
