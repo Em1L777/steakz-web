@@ -70,7 +70,8 @@ export const ManagerDashboard: React.FC = () => {
         const res = await api.get(`/api/branches/${user.branchId}/reservations`);
         setReservations(res.data);
       } else if (tab === 'orders') {
-        const res = await api.get(`/api/branches/${user.branchId}/orders`);
+        // ✅ Safely passing '?all=true' query modifier parameter to retrieve full historical ledger
+        const res = await api.get(`/api/branches/${user.branchId}/orders?all=true`);
         setOrders(res.data);
       } else if (tab === 'reports') {
         setReportData(null); 
@@ -597,57 +598,68 @@ const hireStaff = async (e: React.FormEvent) => {
 )}
 
   {/* 4. ORDERS TAB VIEW PANEL */}
-  {tab === 'orders' && (
-    <div className="space-y-6">
-      <h1 className="font-serif text-2xl font-bold">Branch Sales & Live Tickets</h1>
-      {orders.length === 0 ? (
-        <div className="bg-[#181818]/60 border border-dashed border-white/10 p-6 rounded-2xl text-center space-y-3">
-          <p className="text-gray-400 text-xs">No customer order tickets or processing requests tracked for this branch entity yet.</p>
-        </div>
-      ) : (
-        <div className="bg-[#181818] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-black/40 border-b border-white/5 text-gray-400 uppercase font-medium tracking-wider">
-                <th className="p-4">Ticket ID & Location</th>
-                <th className="p-4">Order Items Breakdown</th>
-                <th className="p-4">Total Price</th>
-                <th className="p-4 text-right">Pipeline Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {orders.map(order => {
-                const getStatusStyle = (status: string) => {
-                  switch(status.toUpperCase()) {
-                    case 'PENDING': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-                    case 'IN_PROGRESS': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-                    case 'READY': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-                    default: return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-                  }
-                };
+{tab === 'orders' && (
+  <div className="space-y-6">
+    <h1 className="font-serif text-2xl font-bold">Branch Sales & Live Tickets</h1>
+    {orders.length === 0 ? (
+      <div className="bg-[#181818]/60 border border-dashed border-white/10 p-6 rounded-2xl text-center space-y-3">
+        <p className="text-gray-400 text-xs">No customer order tickets or processing requests tracked for this branch entity yet.</p>
+      </div>
+    ) : (
+      <div className="bg-[#181818] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr className="bg-black/40 border-b border-white/5 text-gray-400 uppercase font-medium tracking-wider">
+              <th className="p-4">Ticket ID & Location</th>
+              <th className="p-4">Order Items Breakdown</th>
+              <th className="p-4">Total Price</th>
+              <th className="p-4 text-right">Pipeline Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+            {orders.map(order => {
+              const getStatusStyle = (status: string) => {
+                switch(status?.toUpperCase()) {
+                  case 'PENDING': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+                  case 'IN_PROGRESS': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+                  case 'READY': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                  case 'COMPLETED': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                  case 'CANCELLED': return 'bg-red-500/10 text-red-400 border-red-500/20';
+                  default: return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20';
+                }
+              };
 
-                return (
-                  <tr key={order.id} className="hover:bg-white/[0.01] transition-colors">
-                    <td className="p-4">
-                      <div className="text-white font-bold font-mono">#ID-{order.id}</div>
-                      <div className="text-[10px] text-[#d4af37] font-semibold mt-0.5">TABLE {order.tableNumber}</div>
-                    </td>
-                    <td className="p-4">
-                      <div className="text-gray-200 font-mono tracking-wide whitespace-pre-wrap max-w-md uppercase">{order.details || "No menu items bundled."}</div>
-                    </td>
-                    <td className="p-4 font-mono text-[#d4af37] font-semibold text-sm">£{Number(order.totalPrice || 0).toFixed(2)}</td>
-                    <td className="p-4 text-right">
-                      <span className={`border px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-wide uppercase ${getStatusStyle(order.status)}`}>{order.status}</span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  )}
+              // Safely compute localized timestamp metadata block format
+              const orderTime = order.createdAt ? new Date(order.createdAt).toLocaleString([], {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) : 'N/A';
+
+              return (
+                <tr key={order.id} className="hover:bg-white/[0.01] transition-colors">
+                  <td className="p-4">
+                    <div className="text-white font-bold font-mono">#ID-{order.id}</div>
+                    <div className="text-[10px] text-[#d4af37] font-semibold mt-0.5">TABLE {order.tableNumber}</div>
+                    <div className="text-[9px] text-gray-500 font-mono mt-1">{orderTime}</div>
+                  </td>
+                  <td className="p-4">
+                    <div className="text-gray-200 font-mono tracking-wide whitespace-pre-wrap max-w-md uppercase">{order.details || "No menu items bundled."}</div>
+                  </td>
+                  <td className="p-4 font-mono text-[#d4af37] font-semibold text-sm">£{Number(order.totalPrice || 0).toFixed(2)}</td>
+                  <td className="p-4 text-right">
+                    <span className={`border px-2.5 py-1 rounded text-[10px] font-mono font-bold tracking-wide uppercase ${getStatusStyle(order.status)}`}>{order.status}</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+)}
 
   {/* 5. FINANCIAL REPORTS TAB PANEL */}
   {tab === 'reports' && (
