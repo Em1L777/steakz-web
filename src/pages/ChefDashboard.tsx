@@ -93,17 +93,30 @@ export const ChefDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-2 bg-black/40 border-t border-white/5">
-              {ticket.status === 'PENDING' ? (
-                <button onClick={() => fireStatusTransition(ticket.id, 'IN_PROGRESS')} className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-lg text-xs tracking-wider uppercase transition-colors">
-                  Accept & Start Cooking
-                </button>
-              ) : (
-                <button onClick={() => fireStatusTransition(ticket.id, 'READY')} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-3 rounded-lg text-xs tracking-wider uppercase transition-colors">
-                  Pass to Pass / Ready
-                </button>
-              )}
-            </div>
+            <div className="mt-auto pt-4 border-t border-white/5 space-y-2">
+  {/* If the ticket is completely fresh (PENDING) */}
+  {ticket.status === 'PENDING' && (
+    <button
+      onClick={() => fireStatusTransition(ticket.id, 'IN_PROGRESS')}
+      className="w-full bg-[#d4af37] text-black font-bold py-2 rounded text-xs uppercase tracking-wider hover:bg-[#bfa232] transition-colors"
+    >
+      Accept / Start Cooking
+    </button>
+  )}
+
+  {/* If a waiter claimed it, it is 'IN_PROGRESS' but the chef hasn't cooked it yet. 
+      We show BOTH buttons so the chef can choose to explicitly accept it or mark it ready straight away! */}
+  {ticket.status === 'IN_PROGRESS' && (
+    <div className="flex flex-col gap-2">
+      <button
+        onClick={() => fireStatusTransition(ticket.id, 'READY')}
+        className="w-full bg-emerald-500 text-black font-bold py-2 rounded text-xs uppercase tracking-wider hover:bg-emerald-400 transition-colors"
+      >
+        Pass Ready
+      </button>
+    </div>
+  )}
+</div>
           </div>
         ))}
       </main>
