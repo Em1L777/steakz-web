@@ -100,47 +100,55 @@ const deliverTicketItems = async (id: number) => {
       <main className="xl:col-span-3 p-8 space-y-8 overflow-y-auto max-h-screen">
         
         {/* ==================== RESERVATION SECTION ==================== */}
-        <div>
-          <h2 className="text-xs uppercase tracking-widest text-gray-400 font-bold mb-4 flex items-center gap-2">
-            <span>📅</span> Oncoming Shift Bookings (Active Only)
-          </h2>
-          {reservations.length === 0 ? (
-            <p className="text-xs text-gray-600 bg-black/20 p-4 rounded-lg border border-dashed border-white/5 text-center">
-              No oncoming table reservations booked for this shift.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {reservations.map((res) => (
-                <div key={res.id} className="bg-[#1c1c1c] border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-[#d4af37]/30 transition-all">
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/20 text-[10px] font-bold px-2.5 py-0.5 rounded-md">
-                        Table #{res.tableNumber}
-                      </span>
-                      <span className="text-gray-500 text-[11px]">
-                        {new Date(res.reservedFor).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <h3 className="text-xs font-bold text-white mb-0.5">{res.customerName}</h3>
-                    <p className="text-[10px] text-gray-400 font-mono mb-4">{res.customerContact}</p>
-                    {res.notes && (
-                      <div className="mt-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-200 text-xs">
-                        <strong>Note:</strong> {res.notes}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <button
-                    onClick={() => markAsArrived(res.id)}
-                    className="w-full bg-[#d4af37] hover:bg-[#c5a232] text-black font-bold py-2 rounded-lg text-[10px] uppercase tracking-wider transition-all"
-                  >
-                    Mark as Arrived
-                  </button>
+<div>
+  <h2 className="text-xs uppercase tracking-widest text-gray-400 font-bold mb-4 flex items-center gap-2">
+    <span>📅</span> Oncoming Shift Bookings (Active Only)
+  </h2>
+  {reservations.length === 0 ? (
+    <p className="text-xs text-gray-600 bg-black/20 p-4 rounded-lg border border-dashed border-white/5 text-center">
+      No oncoming table reservations booked for this shift.
+    </p>
+  ) : (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {reservations.map((res) => (
+        <div key={res.id} className="bg-[#1c1c1c] border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-[#d4af37]/30 transition-all">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <span className="bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/20 text-[10px] font-bold px-2.5 py-0.5 rounded-md">
+                Table #{res.tableNumber}
+              </span>
+              
+              {/* 📆 Updated to show both short Calendar Date and clear Clock Time */}
+              <div className="text-right text-[11px] font-mono leading-tight">
+                <div className="text-white">
+                  {new Date(res.reservedFor).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
-              ))}
+                <div className="text-gray-500 text-[10px] mt-0.5">
+                  {new Date(res.reservedFor).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                </div>
+              </div>
             </div>
-          )}
+            
+            <h3 className="text-xs font-bold text-white mb-0.5">{res.customerName}</h3>
+            <p className="text-[10px] text-gray-400 font-mono mb-4">{res.customerContact}</p>
+            {res.notes && (
+              <div className="mt-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-200 text-xs">
+                <strong>Note:</strong> {res.notes}
+              </div>
+            )}
+          </div>
+          
+          <button
+            onClick={() => markAsArrived(res.id)}
+            className="w-full bg-[#d4af37] hover:bg-[#c5a232] text-black font-bold py-2 rounded-lg text-[10px] uppercase tracking-wider transition-all"
+          >
+            Mark as Arrived
+          </button>
         </div>
+      ))}
+    </div>
+  )}
+</div>
 
         {/* ==================== ACTIVE TABLES SECTION ==================== */}
         <div>
