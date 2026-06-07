@@ -97,7 +97,7 @@ export const HqDashboard: React.FC = () => {
           </div>
         </div>
         <div className="bg-[#181818]/80 border border-white/5 p-6 rounded-2xl shadow-xl">
-          <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-semibold">Active Monitored Locations</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-semibold"> Monitored Locations</span>
           <div className="text-4xl font-serif text-white font-black mt-2">
             {metrics?.branchRevenue.length || 0} Sites
           </div>

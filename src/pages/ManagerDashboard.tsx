@@ -242,7 +242,14 @@ const hireStaff = async (e: React.FormEvent) => {
         <div className="space-y-6">
           <div>
             <h2 className="font-serif text-xl tracking-wide text-white font-bold">Branch Operations</h2>
-            <p className="text-gray-500 text-[10px] uppercase tracking-wider mt-1">Multi-tenant scope</p>
+            <p className="text-[#d4af37] text-[11px] uppercase font-bold tracking-wider mt-1">
+              {user?.branchId === 1 ? 'London Branch' : 
+               user?.branchId === 7 ? 'Birmingham Branch' : 
+               user?.branchId === 8 ? 'Manchester Branch' : 
+               user?.branchId === 9 ? 'Liverpool Branch' : 
+               user?.branchId === 10 ? 'Glasgow Branch' : `Store Node #${user?.branchId}`}
+            </p>
+            <p className="text-gray-600 text-[9px] uppercase tracking-mono font-mono mt-0.5">Scope Matrix Area</p>
           </div>
 
           <div className="flex flex-col gap-1.5">

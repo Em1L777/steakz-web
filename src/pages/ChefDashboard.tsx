@@ -62,7 +62,16 @@ const fetchKitchenLine = async () => {
         
         {/* ✅ Right Side Flex Wrapper Containing Station Marker and integrated Log Out Button Action */}
         <div className="flex items-center gap-4">
-          <div className="text-xs text-[#d4af37] font-mono tracking-wider font-bold">GRILL & EXPEDITE STATION</div>
+          <div className="text-right">
+            <div className="text-xs text-[#d4af37] font-mono tracking-wider font-bold">GRILL & EXPEDITE STATION</div>
+            <div className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mt-0.5">
+              {user?.branchId === 1 ? 'London Branch' : 
+               user?.branchId === 7 ? 'Birmingham Branch' : 
+               user?.branchId === 8 ? 'Manchester Branch' : 
+               user?.branchId === 9 ? 'Liverpool Branch' : 
+               user?.branchId === 10 ? 'Glasgow Branch' :`Branch #${user?.branchId}`}
+            </div>
+          </div>
           <button 
             onClick={logout} 
             className="flex items-center gap-1.5 bg-transparent hover:bg-white/5 border border-white/10 hover:border-red-500/40 text-gray-400 hover:text-red-400 font-bold text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all active:scale-95"
