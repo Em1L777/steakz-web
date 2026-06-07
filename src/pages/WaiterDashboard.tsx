@@ -92,9 +92,10 @@ const deliverTicketItems = async (id: number) => {
             <div className="mt-2 pt-2 border-t border-white/5 flex flex-col gap-0.5">
               <span className="text-[11px] font-bold text-[#d4af37]">
                 {user?.branchId === 1 ? 'London Branch' : 
-                 user?.branchId === 2 ? 'Birmingham Branch' : 
-                 user?.branchId === 3 ? 'Manchester Branch' : 
-                 user?.branchId === 4 ? 'Liverpool Branch' : `Station Branch #${user?.branchId}`}
+                 user?.branchId === 7 ? 'Birmingham Branch' : 
+                 user?.branchId === 8 ? 'Manchester Branch' : 
+                 user?.branchId === 9 ? 'Liverpool Branch' : 
+                 user?.branchId === 10 ? 'Glasgow Branch' : `Station Branch #${user?.branchId}`}
               </span>
               <p className="text-[9px] text-gray-500 font-mono">Branch Station ID: {user?.branchId}</p>
             </div>
