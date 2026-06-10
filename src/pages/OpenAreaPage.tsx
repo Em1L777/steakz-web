@@ -78,6 +78,14 @@ export const OpenAreaPage: React.FC = () => {
 
   const handleCheckoutSubmit = async () => {
     if (!selectedBranch || !tableNum || Object.keys(cart).length === 0) return;
+
+    // ==================== PATCH START: INTERCEPT CLIENT DATA ====================
+    const parsedTable = parseInt(tableNum, 10);
+    if (isNaN(parsedTable) || parsedTable < 1 || parsedTable > 100) {
+      alert("Invalid Table Assignment: Please provide a proper table number from 1 to 100.");
+      return;
+    }
+
     setStatusBanner('');
     try {
       const linesText = Object.values(cart)
@@ -225,8 +233,22 @@ export const OpenAreaPage: React.FC = () => {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-[10px] uppercase font-medium tracking-wider text-gray-400">Assign Table ID</label>
-          <input type="number" value={tableNum} onChange={e => setTableNum(e.target.value)} placeholder="e.g. 5" className="w-full bg-black/40 border border-white/10 rounded-xl py-3 text-center text-sm focus:outline-none focus:border-[#d4af37]" />
+          <label className="block text-[10px] uppercase font-medium tracking-wider text-gray-400">Assign Table Number</label>
+          <input 
+            type="number" 
+            min="1"
+            max="100"
+            step="1"
+            value={tableNum} 
+            onChange={e => {
+              const val = e.target.value;
+              // Block manual decimal point keypress submissions from entering component state
+              if (val.includes('.')) return;
+              setTableNum(val);
+            }} 
+            placeholder="e.g. 5" 
+            className="w-full bg-black/40 border border-white/10 rounded-xl py-3 text-center text-sm focus:outline-none focus:border-[#d4af37]" 
+          />
         </div>
 
         <button onClick={handleCheckoutSubmit} disabled={Object.keys(cart).length === 0 || !tableNum} className="w-full bg-[#d4af37] hover:bg-[#c5a232] disabled:bg-gray-800 disabled:text-gray-600 text-black font-semibold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-lg">
